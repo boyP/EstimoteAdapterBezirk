@@ -11,6 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.bezirk.candidcamera.events.DoorCloseEvent;
+import com.bezirk.candidcamera.events.DoorOpenEvent;
 import com.bezirk.candidcamera.events.VicinityEvent;
 import com.bezirk.hardwareevents.beacon.Beacon;
 import com.bezirk.hardwareevents.beacon.BeaconsDetectedEvent;
@@ -42,28 +44,32 @@ public class MainActivity extends AppCompatActivity {
         final EventSet eventSet = new EventSet(BeaconsDetectedEvent.class);
 
         eventSet.setEventReceiver(new EventSet.EventReceiver() {
-            @Override
-            public void receiveEvent(Event event, ZirkEndPoint sender) {
-                if (event instanceof BeaconsDetectedEvent) {
-                    final BeaconsDetectedEvent beaconsDetectedEvt = (BeaconsDetectedEvent) event;
+                @Override
+                public void receiveEvent(Event event, ZirkEndPoint sender) {
+                    if (event instanceof BeaconsDetectedEvent) {
+                        final BeaconsDetectedEvent beaconsDetectedEvt = (BeaconsDetectedEvent) event;
 
-                    boolean foundPhone = false;
-                    for (Beacon beacon : beaconsDetectedEvt.getBeacons()) {
-//                        Log.d("test", "Found Beacon " + beacon.getId() + " : rssi :" + beacon.getRssi() + " : name : " + beacon.getHardwareName());
-                        if(beacon.getId().equals(estimoteBeaconID)) {
+                        boolean foundPhone = false;
+                        for (Beacon beacon : beaconsDetectedEvt.getBeacons()) {
+    //                        Log.d("test", "Found Beacon " + beacon.getId() + " : rssi :" + beacon.getRssi() + " : name : " + beacon.getHardwareName());
+                            if(beacon.getId().equals(estimoteBeaconID)) {
                             foundPhone = true;
                         }
                     }
 
                     // Publish inVicinity Event
                     bezirk.sendEvent(new VicinityEvent(foundPhone));
-                    
+
                     if(!foundPhone) {
                         statusTxtView.setText(R.string.lost_car);
                     }
                     else {
                         statusTxtView.setText(R.string.found_car);
                     }
+                }
+
+                else {
+                    Log.d("door", "else :");
                 }
             }
         });
@@ -87,7 +93,52 @@ public class MainActivity extends AppCompatActivity {
                 builder.show();
             }
         }
+
+        /****************************
+              DOOR OPEN EVENT
+         ***************************/
+
+        final EventSet doorOpenEventSet = new EventSet(DoorOpenEvent.class);
+        doorOpenEventSet.setEventReceiver(new EventSet.EventReceiver() {
+
+            @Override
+            public void receiveEvent(Event event, ZirkEndPoint zirkEndPoint) {
+                if (event instanceof DoorOpenEvent) {
+                    final DoorOpenEvent doorOpenEvent = (DoorOpenEvent) event;
+                    onDoorOpenEvent(doorOpenEvent);
+                }
+            }
+        });
+
+        bezirk.subscribe(doorOpenEventSet);
+
+        /****************************
+          DOOR CLOSE EVENT
+         ***************************/
+        final EventSet doorCloseEventSet = new EventSet(DoorCloseEvent.class);
+        doorCloseEventSet.setEventReceiver(new EventSet.EventReceiver() {
+
+            @Override
+            public void receiveEvent(Event event, ZirkEndPoint zirkEndPoint) {
+                if (event instanceof DoorCloseEvent) {
+                    final DoorCloseEvent doorCloseEvent = (DoorCloseEvent) event;
+                    onDoorCloseEvent(doorCloseEvent);
+                }
+            }
+        });
+
     }
+
+    private void onDoorOpenEvent(DoorOpenEvent event) {
+        Log.d("Door", "Received door open event: " + event.toString());
+    }
+
+    private void onDoorCloseEvent(DoorCloseEvent event) {
+        Log.d("Door", "Received door close event: " + event.toString());
+    }
+
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
