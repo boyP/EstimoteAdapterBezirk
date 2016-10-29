@@ -1,0 +1,39 @@
+apply plugin: 'com.android.library'
+//apply from: "${rootDir}/artifactory-aar-publish.gradle"
+group = 'com.bezirk'
+version = "1.0.0"
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 18
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+    }
+	
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    jcenter()
+    maven {
+        url "https://bezirk.artifactoryonline.com/bezirk/libs-release-local/"
+    }
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+
+    compile 'com.android.support:appcompat-v7:24.1.1'
+    compile 'com.estimote:sdk:0.10.4@aar'
+    compile 'com.bezirk:bezirk-middleware-api:3.0.2-3'
+    compile 'com.bezirk:HardwareEvents:0.0.29'
+}

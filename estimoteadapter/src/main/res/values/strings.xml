@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">estimoteadapter</string>
+    <string name="found_car">Found my car!</string>
+    <string name="lost_car">Lost my car!</string>
+</resources>
