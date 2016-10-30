@@ -1,10 +1,12 @@
 package com.bezirk.adapter.estimote;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +14,7 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import com.bezirk.candidcamera.events.DoorOpenEvent;
+import com.bezirk.candidcamera.events.RecorderEvent;
 import com.bezirk.candidcamera.events.VicinityEvent;
 import com.bezirk.hardwareevents.beacon.Beacon;
 import com.bezirk.hardwareevents.beacon.BeaconsDetectedEvent;
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
 
     private static final long THRESHOLD = 10000;
+    private static final long VIBRATE_DURATION = 5000;
 
     private EstimoteAdapter estimoteAdapter;
     private static final String estimoteBeaconID = "b9407f30-f5f8-466e-aff9-25556b57fe99";
@@ -36,13 +40,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final ImageView imgView = (ImageView) findViewById(R.id.vicinity);
+        final Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
 
         BezirkMiddleware.initialize(this);
         final Bezirk bezirk = BezirkMiddleware.registerZirk("Estimote Adapter Test");
 
         estimoteAdapter = new EstimoteAdapter(bezirk, getApplicationContext());
 
-        final EventSet eventSet = new EventSet(BeaconsDetectedEvent.class, DoorOpenEvent.class);
+        final EventSet eventSet = new EventSet(BeaconsDetectedEvent.class, DoorOpenEvent.class, RecorderEvent.class);
         eventSet.setEventReceiver(new EventSet.EventReceiver() {
             long lastBeaconTime = 0;
                 @Override
@@ -83,6 +88,20 @@ public class MainActivity extends AppCompatActivity {
                         // Publish Vicinity Event
                         bezirk.sendEvent(new VicinityEvent(phoneNearby));
                         Log.d("beacon", "sent phone event");
+                    }
+
+                    /****************************
+                     *      RECORDER EVENT
+                     ***************************/
+                    else if(event instanceof RecorderEvent) {
+                        Log.d("record", "Received record event: " + event.toString());
+                        final RecorderEvent recorderEvent = (RecorderEvent) event;
+
+                        // Vibrate phone if recording is finished
+                        if(recorderEvent.getAction().equals("finish")) {
+                            Log.d("vibrate", "vibrating for: " + VIBRATE_DURATION);
+                            vibrator.vibrate(VIBRATE_DURATION);
+                        }
                     }
                 }
         });
