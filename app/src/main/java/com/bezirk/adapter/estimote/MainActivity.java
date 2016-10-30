@@ -10,9 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.bezirk.candidcamera.events.DoorCloseEvent;
 import com.bezirk.candidcamera.events.DoorOpenEvent;
 import com.bezirk.candidcamera.events.VicinityEvent;
 import com.bezirk.hardwareevents.beacon.Beacon;
@@ -44,22 +42,21 @@ public class MainActivity extends AppCompatActivity {
 
         estimoteAdapter = new EstimoteAdapter(bezirk, getApplicationContext());
 
-
-        /****************************
-         *      VICINITY EVENT
-         ***************************/
-
         final EventSet eventSet = new EventSet(BeaconsDetectedEvent.class, DoorOpenEvent.class);
         eventSet.setEventReceiver(new EventSet.EventReceiver() {
             long lastBeaconTime = 0;
                 @Override
                 public void receiveEvent(Event event, ZirkEndPoint sender) {
+
+                    /****************************
+                     *      VICINITY EVENT
+                     ***************************/
+
                     if (event instanceof BeaconsDetectedEvent) {
                         final BeaconsDetectedEvent beaconsDetectedEvt = (BeaconsDetectedEvent) event;
 
                         boolean foundPhone = false;
                         for (Beacon beacon : beaconsDetectedEvt.getBeacons()) {
-    //                        Log.d("test", "Found Beacon " + beacon.getId() + " : rssi :" + beacon.getRssi() + " : name : " + beacon.getHardwareName());
                             if(beacon.getId().equals(estimoteBeaconID)) {
                                 foundPhone = true;
                                 lastBeaconTime = System.currentTimeMillis();
@@ -75,11 +72,15 @@ public class MainActivity extends AppCompatActivity {
                             imgView.setImageResource(R.mipmap.success);
                         }
                     }
+
+                    /****************************
+                     *      DOOR OPEN EVENT
+                     ***************************/
                     else if(event instanceof DoorOpenEvent) {
                         Log.d("Door", "Received door open event: " + event.toString());
                         boolean phoneNearby = (lastBeaconTime > System.currentTimeMillis() - THRESHOLD);
 
-                        // Publish inVicinity Event
+                        // Publish Vicinity Event
                         bezirk.sendEvent(new VicinityEvent(phoneNearby));
                         Log.d("beacon", "sent phone event");
                     }
