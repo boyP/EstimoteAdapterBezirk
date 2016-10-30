@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bezirk.candidcamera.events.DoorCloseEvent;
@@ -26,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private static final String TAG = MainActivity.class.getName();
 
+    private static final long THRESHOLD = 10000;
+
     private EstimoteAdapter estimoteAdapter;
     private static final String estimoteBeaconID = "b9407f30-f5f8-466e-aff9-25556b57fe99";
 
@@ -34,16 +37,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final TextView statusTxtView = (TextView) findViewById(R.id.statusTxtView);
+        final ImageView imgView = (ImageView) findViewById(R.id.vicinity);
 
         BezirkMiddleware.initialize(this);
         final Bezirk bezirk = BezirkMiddleware.registerZirk("Estimote Adapter Test");
 
         estimoteAdapter = new EstimoteAdapter(bezirk, getApplicationContext());
 
-        final EventSet eventSet = new EventSet(BeaconsDetectedEvent.class);
 
+        /****************************
+         *      VICINITY EVENT
+         ***************************/
+
+        final EventSet eventSet = new EventSet(BeaconsDetectedEvent.class, DoorOpenEvent.class);
         eventSet.setEventReceiver(new EventSet.EventReceiver() {
+            long lastBeaconTime = 0;
                 @Override
                 public void receiveEvent(Event event, ZirkEndPoint sender) {
                     if (event instanceof BeaconsDetectedEvent) {
@@ -53,25 +61,29 @@ public class MainActivity extends AppCompatActivity {
                         for (Beacon beacon : beaconsDetectedEvt.getBeacons()) {
     //                        Log.d("test", "Found Beacon " + beacon.getId() + " : rssi :" + beacon.getRssi() + " : name : " + beacon.getHardwareName());
                             if(beacon.getId().equals(estimoteBeaconID)) {
-                            foundPhone = true;
+                                foundPhone = true;
+                                lastBeaconTime = System.currentTimeMillis();
+                            }
+                        }
+
+                        if(!foundPhone) {
+                            Log.d("beacon", "Out of Range!");
+                            imgView.setImageResource(R.mipmap.error);
+                        }
+                        else {
+                            Log.d("beacon", "In Range of House!");
+                            imgView.setImageResource(R.mipmap.success);
                         }
                     }
+                    else if(event instanceof DoorOpenEvent) {
+                        Log.d("Door", "Received door open event: " + event.toString());
+                        boolean phoneNearby = (lastBeaconTime > System.currentTimeMillis() - THRESHOLD);
 
-                    // Publish inVicinity Event
-                    bezirk.sendEvent(new VicinityEvent(foundPhone));
-
-                    if(!foundPhone) {
-                        statusTxtView.setText(R.string.lost_car);
-                    }
-                    else {
-                        statusTxtView.setText(R.string.found_car);
+                        // Publish inVicinity Event
+                        bezirk.sendEvent(new VicinityEvent(phoneNearby));
+                        Log.d("beacon", "sent phone event");
                     }
                 }
-
-                else {
-                    Log.d("door", "else :");
-                }
-            }
         });
 
         bezirk.subscribe(eventSet);
@@ -93,52 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 builder.show();
             }
         }
-
-        /****************************
-              DOOR OPEN EVENT
-         ***************************/
-
-        final EventSet doorOpenEventSet = new EventSet(DoorOpenEvent.class);
-        doorOpenEventSet.setEventReceiver(new EventSet.EventReceiver() {
-
-            @Override
-            public void receiveEvent(Event event, ZirkEndPoint zirkEndPoint) {
-                if (event instanceof DoorOpenEvent) {
-                    final DoorOpenEvent doorOpenEvent = (DoorOpenEvent) event;
-                    onDoorOpenEvent(doorOpenEvent);
-                }
-            }
-        });
-
-        bezirk.subscribe(doorOpenEventSet);
-
-        /****************************
-          DOOR CLOSE EVENT
-         ***************************/
-        final EventSet doorCloseEventSet = new EventSet(DoorCloseEvent.class);
-        doorCloseEventSet.setEventReceiver(new EventSet.EventReceiver() {
-
-            @Override
-            public void receiveEvent(Event event, ZirkEndPoint zirkEndPoint) {
-                if (event instanceof DoorCloseEvent) {
-                    final DoorCloseEvent doorCloseEvent = (DoorCloseEvent) event;
-                    onDoorCloseEvent(doorCloseEvent);
-                }
-            }
-        });
-
     }
-
-    private void onDoorOpenEvent(DoorOpenEvent event) {
-        Log.d("Door", "Received door open event: " + event.toString());
-    }
-
-    private void onDoorCloseEvent(DoorCloseEvent event) {
-        Log.d("Door", "Received door close event: " + event.toString());
-    }
-
-
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
