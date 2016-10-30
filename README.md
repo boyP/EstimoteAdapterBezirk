@@ -10,5 +10,5 @@ This is an Android app for sending and receiving events for the Candid Camera Ha
 5. Run the application on all authorized android devices (i.e. smartphones of people expected to be coming and going) with bluetooth, and wifi enabled.  Some beacons may require the location feature to be enabled as well.
 6. Install the Bluetooth beacon on or near the "inside" of the door.  You may want to use a temporary mounting at first to experiment with the exact placement later. 
 7. The prototype app gives a visual indicator of an X when the beacon is not detected, and a checkmark when it is, on a delay from when the phone enters or leaves the beacon range.  Using this information can help you in adjusting the power level of the beacon, which should be relatively low in order to just cover the area around the doorway, while still producing alerts if e.g. a stranger enters while the authorized owner is asleep in a back room.  
-8. To reduce signal delays, we also recommended increasing the beacon advertising frequency, closer to 100ms than 1000.  
+8. To reduce signal delays, we also recommended reducing the beacon advertising period, closer to 100ms than 1000.  
 
