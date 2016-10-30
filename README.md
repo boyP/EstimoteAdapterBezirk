@@ -3,8 +3,8 @@
 This is an Android app for sending and receiving events for the Candid Camera Hackathon project using the Bezirk IoT Middleware.
 
 ## Project Installation
-1. Clone this repository
-2. Open this project in Android Studio and do a clean build: 'build -> rebuild project'
+1. Clone this repository.
+2. Open this project in Android Studio and do a clean build: 'build -> rebuild project'.
 3. If you receive a "build tools missing" error, click the link in the error to install additional Android build tools.
 4. In `src/main/java/com/bezirk/adapter/estimote/MainActivity.java`, where `private static final String estimoteBeaconID` is set, change the beacon ID to match the beacon you have.  For Estimote beacons, this can be found via the beacon controller app. 
 5. Run the application on all authorized android devices (i.e. smartphones of people expected to be coming and going) with bluetooth, and wifi enabled.  Some beacons may require the location feature to be enabled as well.
